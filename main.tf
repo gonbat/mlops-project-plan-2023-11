@@ -1,12 +1,25 @@
 locals {
-  project-id  = "mlops-project-plan-2023-11"
-  project-num = 349383938394
+  project_id = "Reflexai"
   usernames = {
     "taki" : "taki@abc.com",
     "john" : "john@abc.com"
   }
 }
 
-## ==============================================
-## Section 1: FILL IN CODE HERE TO REFERENCE RELEVANT MODULES
-## ==============================================
+provider "google" {
+  project = local.project_id
+  region  = "us-central1"  # Adjust if needed
+}
+
+# Module to manage service accounts and assign roles
+module "service_accounts" {
+  source     = "./modules/service-accounts"
+  project_id = local.project_id
+  usernames  = local.usernames
+}
+
+# Module to create BigQuery dataset and table
+module "big_query" {
+  source     = "./modules/big-query"
+  project_id = local.project_id
+}
