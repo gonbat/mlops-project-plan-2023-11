@@ -6,10 +6,11 @@ terraform {
     }
   }
   backend "gcs" {
-    bucket = "mlops-project-plan-2023-11-terraform-state"
+    bucket = "mlops-project-plan-2023-11-ts"
   }
 }
 
 provider "google" {
-  project = local.project-id
+  project = local.project_id
+  region  = "us-central1"
 }
