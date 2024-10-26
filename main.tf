@@ -6,10 +6,6 @@ locals {
   }
 }
 
-provider "google" {
-  project = local.project_id
-  region  = "us-central1"  # Adjust if needed
-}
 
 # Module to manage service accounts and assign roles
 module "service_accounts" {
