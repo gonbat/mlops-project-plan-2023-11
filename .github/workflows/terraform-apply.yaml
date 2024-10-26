@@ -1,43 +1,60 @@
-name: Terraform set up
-description: Common steps for terraform (setup, init, fmt, validate, plan)
+name: Terraform Apply
 
-## ==============================================
-## Section 1: FILL IN CODE HERE TO SET UP SCHEDULING + ANY ENVIRONMENT VARIABLES
-## ==============================================
+# Section 1: Trigger on push to main, manual dispatch, and scheduled at 1 AM UTC daily
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 1 * * *'  # 1 AM UTC daily
+
+env:
+  TERRAFORM_DIRECTORY: './'  # Specify the Terraform working directory if it's the root; change if needed
 
 jobs:
   terraform:
     name: "Terraform Apply"
-    defaults:
-      run:
-        shell: bash
+    runs-on: ubuntu-latest
 
-runs:
-  steps:
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Setup Terraform with specified version on the runner
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.3.7
 
-      - name: Google Auth
-        id: auth
-        ## ==============================================
-        ## Section 2: FILL IN CODE HERE TO SET UP GOOGLE AUTHENTICATION
-        ## ==============================================
+      # Section 2: Google Authentication using Workload Identity Federation (WIF)
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: "${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.GCP_SERVICE_ACCOUNT }}"  # Set this secret in GitHub with the service account email
 
+      # Initialize Terraform
       - name: Terraform init
         id: init
         run: terraform init
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
 
-      - name: Terraform checks
+      # Section 3: Terraform Checks - Formatting, Validation, and Plan
+      - name: Terraform format and validate
         id: checks
-        run:
-        ## ==============================================
-        ## Section 3: FILL IN CODE HERE TO SET UP TERRAFORM CHECKS
-        ## ==============================================
-
-      - name: Terraform Apply
-        run: terraform apply
-        shell: bash
+        run: |
+          terraform fmt -check  # Check for formatting issues
+          terraform validate     # Validate the syntax and configuration
         working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+
+      - name: Terraform plan
+        id: plan
+        run: terraform plan -out=tfplan  # Create an execution plan
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+
+      # Optional: Apply changes only if manually approved or for certain workflows
+      - name: Terraform Apply
+        if: github.event_name == 'workflow_dispatch'  # Only applies automatically if manually triggered
+        run: terraform apply "tfplan"
+        working-directory: ${{ env.TERRAFORM_DIRECTORY }}
+        shell: bash
