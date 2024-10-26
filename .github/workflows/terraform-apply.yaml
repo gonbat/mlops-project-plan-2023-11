@@ -12,7 +12,12 @@ on:
 env:
   TERRAFORM_DIRECTORY: './'  # Specify the Terraform working directory if it's the root; change if needed
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
+
   terraform:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
