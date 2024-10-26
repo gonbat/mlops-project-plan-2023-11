@@ -1,5 +1,5 @@
 locals {
-  project_id = "Reflexai"
+  project_id = "reflexai-439703"
   usernames = {
     "taki" : "taki@abc.com",
     "john" : "john@abc.com"
